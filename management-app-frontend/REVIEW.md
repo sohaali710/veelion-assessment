@@ -85,7 +85,7 @@ This review covers the supplied Next.js App Router frontend, its Task Dashboard,
 - For the Task Dashboard, reuse its existing shared `error` state. Change the rendering condition so an update error does not hide tasks that were already loaded; the existing refresh action can reload the latest data.
 - The working copy includes a `TasksSummary` type, backend API helper for `GET /reports/tasks-summary`, same-origin Next.js proxy at `/api/reports/tasks-summary`, `/reports` page, and home-page link. The page shows total tasks, counts by status, and recent activity count with loading and error states.
 - The Reports API response is raw JSON rather than wrapped in a `data` property. Its `recentActivityCount` uses the seven-day window implemented in the tested backend.
-- The Activity and Reports pages now use shared page, state, activity, and report classes instead of repeated inline styles. Styling changes are recorded below.
+- The Home, Task Dashboard, Activity, and Reports pages now use shared page, state, navigation, and feature-specific classes instead of repeated inline styles. Styling changes are recorded below.
 
 ## Styling update plan
 
@@ -96,9 +96,11 @@ This review covers the supplied Next.js App Router frontend, its Task Dashboard,
 - **Responsive behavior:** Stack metric and navigation cards on narrow screens, allow filter controls to wrap, and keep task actions usable without horizontal overflow.
 - **Deferred:** Do not add icons, external fonts, animation libraries, or new dependencies as part of this styling pass.
 
-### Styling implemented for Activity and Reports
+### Styling implemented across the main frontend pages
 
+- Home now has a clear introductory header and responsive navigation cards with short descriptions and visible actions.
+- Task Dashboard now uses the shared page header and state styles for loading and error feedback; task filtering and update behavior are unchanged.
 - Activity now uses the shared page navigation/header, loading and error states, summary panel, activity list, and activity entry classes. The search input and filtering behavior are unchanged.
 - Reports now presents total tasks, the three status counts, and recent activity in a responsive report grid. Status counts are displayed as a definition list for clearer scanning.
-- Added focused styles for the Activity header and empty state, report status rows and note, and consistent state-message spacing. Existing colors, cards, and responsive rules are reused.
+- Added focused styles for the home navigation cards, Activity header and empty state, report status rows and note, and consistent state-message spacing. Existing colors, cards, and responsive rules are reused.
 - The TaskItem, StatusFilter, and TaskList styling changes were made by the user and were left untouched in this update.
