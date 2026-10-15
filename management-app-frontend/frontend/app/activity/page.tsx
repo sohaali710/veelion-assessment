@@ -80,15 +80,20 @@ export default function ActivityPage() {
   }, [activity, query]);
 
   return (
-    <main className="stack">
-      <nav>
+    <main className="page-stack">
+      <nav className="page-nav">
         <Link href="/" className="button">
           Back
         </Link>
       </nav>
 
-      <section className="card" style={{ padding: "1rem" }}>
-        <h1 style={{ marginTop: 0, marginBottom: "0.5rem" }}>Activity Feed</h1>
+      <section className="card page-header activity-header">
+        <div>
+          <h1>Activity Feed</h1>
+          <p className="page-subtitle">
+            Review recent task changes and search the feed.
+          </p>
+        </div>
 
         <input
           className="input"
@@ -101,19 +106,18 @@ export default function ActivityPage() {
       </section>
 
       {loading ? (
-        <section className="card" style={{ padding: "1rem" }}>
-          <p role="status" style={{ margin: 0 }}>
+        <section className="card state-card">
+          <p role="status" className="state-message">
             Loading activity…
           </p>
         </section>
       ) : null}
 
       {!loading && error ? (
-        <section
-          className="card"
-          style={{ padding: "1rem", borderColor: "#e3b4c0" }}
-        >
-          <p role="alert">{error}</p>
+        <section className="card state-card state-card--error">
+          <p role="alert" className="state-message">
+            {error}
+          </p>
           <button type="button" className="button" onClick={loadActivity}>
             Retry
           </button>
@@ -122,42 +126,30 @@ export default function ActivityPage() {
 
       {!loading && !error ? (
         <>
-          <section className="card" style={{ padding: "1rem" }}>
-            <small style={{ color: "var(--muted)" }}>
+          <section className="card activity-summary">
+            <small>
               Total: {activity.length} | Visible: {filteredActivity.length}
             </small>
           </section>
 
-          <section className="card" style={{ padding: "1rem" }}>
+          <section className="card activity-panel">
             {filteredActivity.length === 0 ? (
-              <p style={{ margin: 0, color: "var(--muted)" }}>
+              <p className="activity-empty">
                 {activity.length === 0
                   ? "No activity yet."
                   : "No activity matches your search."}
               </p>
             ) : (
-              <ul
-                style={{
-                  margin: 0,
-                  padding: 0,
-                  listStyle: "none",
-                  display: "grid",
-                  gap: "0.7rem",
-                }}
-              >
+              <ul className="activity-list">
                 {filteredActivity.map((item) => (
-                  <li
-                    key={item.id}
-                    style={{
-                      borderBottom: "1px solid var(--border)",
-                      paddingBottom: "0.6rem",
-                    }}
-                  >
-                    <div style={{ fontWeight: 600 }}>
+                  <li key={item.id} className="activity-item">
+                    <div className="activity-item__action">
                       {item.action || "(no action)"}
                     </div>
-                    <div>{item.info || "(no info)"}</div>
-                    <small style={{ color: "var(--muted)" }}>
+                    <div className="activity-item__info">
+                      {item.info || "(no info)"}
+                    </div>
+                    <small className="activity-item__time">
                       {formatTimestamp(item.when)}
                     </small>
                   </li>
