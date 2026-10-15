@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { ActivityLog, ErrorResponse } from "@/types/api";
+import { getActivityFromApi } from "@/lib/clientApi";
+import type { ActivityLog } from "@/types/api";
 
 function formatTimestamp(value: string) {
   const date = new Date(value);
@@ -25,31 +26,8 @@ export default function ActivityPage() {
     setError("");
 
     try {
-      const response = await fetch("/api/activity", {
-        cache: "no-store",
-      });
-
-      let body: unknown;
-
-      try {
-        body = await response.json();
-      } catch {
-        throw new Error("The server returned an unreadable response.");
-      }
-
-      if (!response.ok) {
-        const errorBody = body as ErrorResponse;
-        throw new Error(
-          errorBody.error?.message ||
-            `Could not load activity (status ${response.status}).`,
-        );
-      }
-
-      if (!Array.isArray(body)) {
-        throw new Error("The server returned an unexpected activity response.");
-      }
-
-      setActivity(body as ActivityLog[]);
+      const activityLogs = await getActivityFromApi();
+      setActivity(activityLogs);
     } catch (error) {
       setError(
         error instanceof Error

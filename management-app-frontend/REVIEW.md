@@ -24,11 +24,12 @@ This review covers the supplied Next.js App Router frontend, its Task Dashboard,
 - **Why it matters:** A combined submission could contain two backend implementations and two separate JSON data stores, making it unclear which server and data are authoritative.
 - **Suggested improvement:** Use the separately tested backend as the canonical backend in the final combined repository and include only one backend implementation.
 
-### API access is split between a helper and Next.js route handlers
+### Client-side API requests and backend API requests use separate layers
 
-- **What is wrong:** `lib/backendApi.ts` calls Express directly, while `app/api/*` route handlers proxy those calls for browser components.
-- **Why it matters:** This is a valid server-side proxy pattern, but developers need to preserve the boundary and avoid adding browser requests directly to the backend host.
-- **Suggested improvement:** Keep browser components calling same-origin `/api/...` routes, and have those route handlers call the shared backend helper. Add the Reports proxy using the same pattern.
+- **What is wrong:** Client pages and hooks previously implemented their own direct calls to same-origin `/api/...` routes, while `lib/backendApi.ts` calls Express from the server-side proxy routes.
+- **Why it matters:** Duplicated client request and error handling can become inconsistent across Tasks, Activity, and Reports. The server-side helper should not be imported by browser code because it uses the configured Express URL.
+- **Suggested improvement:** Keep `lib/backendApi.ts` for Next.js-to-Express calls and use a separate shared browser helper for same-origin `/api/...` requests.
+- **Current status:** `lib/clientApi.ts` now owns the shared JSON request/error handling and functions for Tasks, Activity, and Reports. All three client consumers use it; the proxy routes and server-side `backendApi.ts` remain in place.
 
 ## UX issues
 
@@ -85,6 +86,7 @@ This review covers the supplied Next.js App Router frontend, its Task Dashboard,
 - For the Task Dashboard, reuse its existing shared `error` state. Change the rendering condition so an update error does not hide tasks that were already loaded; the existing refresh action can reload the latest data.
 - The working copy includes a `TasksSummary` type, backend API helper for `GET /reports/tasks-summary`, same-origin Next.js proxy at `/api/reports/tasks-summary`, `/reports` page, and home-page link. The page shows total tasks, counts by status, and recent activity count with loading and error states.
 - The Reports API response is raw JSON rather than wrapped in a `data` property. Its `recentActivityCount` uses the seven-day window implemented in the tested backend.
+- Browser requests for Tasks, Activity, and Reports now go through `lib/clientApi.ts`; Next.js API route handlers continue to use `lib/backendApi.ts` for calls to Express.
 - The Home, Task Dashboard, Activity, and Reports pages now use shared page, state, navigation, and feature-specific classes instead of repeated inline styles. Styling changes are recorded below.
 
 ## Styling update plan

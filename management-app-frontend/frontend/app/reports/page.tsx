@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import type { ErrorResponse, TasksSummary } from "@/types/api";
+import { getTasksSummaryFromApi } from "@/lib/clientApi";
+import type { TasksSummary } from "@/types/api";
 
 export default function ReportsPage() {
   const [summary, setSummary] = useState<TasksSummary | null>(null);
@@ -14,21 +15,8 @@ export default function ReportsPage() {
     setError("");
 
     try {
-      const response = await fetch("/api/reports/tasks-summary", {
-        cache: "no-store",
-      });
-
-      const body: unknown = await response.json();
-
-      if (!response.ok) {
-        const errorBody = body as ErrorResponse;
-        throw new Error(
-          errorBody.error?.message ||
-            `Could not load reports (status ${response.status}).`,
-        );
-      }
-
-      setSummary(body as TasksSummary);
+      const reportSummary = await getTasksSummaryFromApi();
+      setSummary(reportSummary);
     } catch (error) {
       setError(
         error instanceof Error

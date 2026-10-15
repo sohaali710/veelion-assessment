@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { ErrorResponse, Task, TaskFilter, TaskResponse, TasksResponse } from "@/types/api";
+import { getTasksFromApi, updateTaskInApi } from "@/lib/clientApi";
+import type { Task, TaskFilter } from "@/types/api";
 
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error) {
@@ -9,27 +10,6 @@ function getErrorMessage(error: unknown, fallback: string): string {
   }
 
   return fallback;
-}
-
-async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers || {}),
-    },
-  });
-
-  if (!response.ok) {
-    try {
-      const body = (await response.json()) as ErrorResponse;
-      throw new Error(body.error?.message || `Request failed with ${response.status}`);
-    } catch (error) {
-      throw new Error(getErrorMessage(error, `Request failed with ${response.status}`));
-    }
-  }
-
-  return (await response.json()) as T;
 }
 
 export function useTasks() {
@@ -44,9 +24,7 @@ export function useTasks() {
       setLoading(true);
       setError("");
 
-      const body = await requestJson<TasksResponse>("/api/tasks", {
-        method: "GET",
-      });
+      const body = await getTasksFromApi();
 
       setTasks(body.data);
     } catch (error) {
@@ -61,10 +39,7 @@ export function useTasks() {
       setUpdatingTaskId(taskId);
       setError("");
 
-      const body = await requestJson<TaskResponse>(`/api/tasks/${taskId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ completed }),
-      });
+      const body = await updateTaskInApi(taskId, completed);
 
       setTasks((previous) =>
         previous.map((task) => (task.id === taskId ? body.data : task))
