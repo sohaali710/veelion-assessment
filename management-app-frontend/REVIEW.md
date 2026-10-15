@@ -1,6 +1,6 @@
 # Frontend Code Review
 
-This review covers the supplied Next.js App Router frontend, its Task Dashboard and Activity Feed, and its API proxy routes. It records current issues and the improvements planned for the assessment. Styling work is intentionally deferred for now.
+This review covers the supplied Next.js App Router frontend, its Task Dashboard, Activity Feed, Reports page, and API proxy routes. It records current issues and the improvements made or planned for the assessment.
 
 ## Performance
 
@@ -37,18 +37,20 @@ This review covers the supplied Next.js App Router frontend, its Task Dashboard 
 - **What is wrong:** The Activity page parses the response body without checking `response.ok`, and its catch handler resets the list to empty without showing an error or retry action.
 - **Why it matters:** Users cannot distinguish a genuine empty feed from a backend or network failure.
 - **Suggested improvement:** Add loading and error state, check the response status, and provide a retry action while keeping an explicit empty state for a successful response with no entries.
+- **Current status:** The Activity page in the working copy now checks the response and displays loading, error, retry, and empty states.
 
 ### Task update errors hide the task list
 
 - **What is wrong:** `TaskDashboard` hides the `TaskList` whenever `useTasks` has an error. An error from a PATCH can therefore replace the entire list after a failed status change.
 - **Why it matters:** The user loses context and may not know whether the task changed.
-- **Suggested improvement:** Keep the list visible after an update error and show the error near the affected task or in a persistent message. Clear it when the next update succeeds.
+- **Suggested improvement:** Reuse the existing `error` state for load and update failures. Keep the task list visible when tasks have already loaded, even if an update fails; show the error and let the user refresh the task data. With no loaded tasks after an initial load failure, show the error without rendering a misleading empty list.
 
 ### Reports UI and navigation are missing
 
 - **What is wrong:** There is no `/reports` page, no frontend proxy route for the Reports endpoint, and the home page links only to Tasks and Activity.
 - **Why it matters:** The required summary feature cannot be reached or displayed from the frontend.
 - **Suggested improvement:** Add a Reports API proxy and `/reports` page for total tasks, counts by status, and recent activity. Include loading, error, and empty or zero-value states, then link to the page from the home navigation.
+- **Current status:** The working copy now contains the Reports proxy route, `/reports` page, and home-page link.
 
 ## Code quality and React practices
 
@@ -57,6 +59,7 @@ This review covers the supplied Next.js App Router frontend, its Task Dashboard 
 - **What is wrong:** `shownActivity` and `forcedList` are both derived from `allActivity` and `query`, while `stats` also stores a timer-derived value that is not displayed.
 - **Why it matters:** Multiple copies of derived data need synchronization and can become inconsistent.
 - **Suggested improvement:** Keep only the source data and user input in state; derive filtered entries and counts during render with a simple expression or `useMemo`.
+- **Current status:** The working copy derives the filtered feed from one activity state and the query; the timer and duplicate lists have been removed.
 
 ### Proxy routes collapse upstream errors into HTTP 500
 
@@ -78,8 +81,24 @@ This review covers the supplied Next.js App Router frontend, its Task Dashboard 
 
 ## Current scope and planned changes
 
-- The Activity Feed refactor should remove the timer and duplicate derived state, use one search filter and timestamp formatter, and display loading, error, retry, and empty states.
-- The Task Dashboard and its hook should be reviewed for update-error handling and kept connected through the existing same-origin Next.js proxy pattern.
-- The Reports proxy, page, and navigation entry are still required.
-- Styling improvements are deferred for now; the assessment's visual polish requirement remains to be completed later.
-- No frontend source changes are represented as completed by this review. Update this section as implementation proceeds.
+- The Activity Feed refactor in the working copy removes the timer and duplicate derived state, uses one search filter and timestamp formatter, and displays loading, error, retry, and empty states.
+- For the Task Dashboard, reuse its existing shared `error` state. Change the rendering condition so an update error does not hide tasks that were already loaded; the existing refresh action can reload the latest data.
+- The working copy includes a `TasksSummary` type, backend API helper for `GET /reports/tasks-summary`, same-origin Next.js proxy at `/api/reports/tasks-summary`, `/reports` page, and home-page link. The page shows total tasks, counts by status, and recent activity count with loading and error states.
+- The Reports API response is raw JSON rather than wrapped in a `data` property. Its `recentActivityCount` uses the seven-day window implemented in the tested backend.
+- The Activity and Reports pages now use shared page, state, activity, and report classes instead of repeated inline styles. Styling changes are recorded below.
+
+## Styling update plan
+
+- **Visual direction:** Use a polished task dashboard style: pale cool-neutral page canvas, white cards, dark readable text, teal action color, generous but consistent spacing, rounded corners, subtle shadows, and restrained hover/focus motion.
+- **Shared styles:** Expand `app/globals.css` with design tokens, responsive page width, typography, card and button states, visible keyboard focus, form controls, and reduced-motion handling.
+- **Reusable page elements:** Add shared classes for page headers, home navigation cards, filter controls, task cards and status badges, activity entries, report metric cards, and loading/error feedback.
+- **Markup updates:** Replace repeated inline layout styles in the Home, Task, Activity, and Reports pages/components with shared class names. Keep the existing API and component behavior unchanged.
+- **Responsive behavior:** Stack metric and navigation cards on narrow screens, allow filter controls to wrap, and keep task actions usable without horizontal overflow.
+- **Deferred:** Do not add icons, external fonts, animation libraries, or new dependencies as part of this styling pass.
+
+### Styling implemented for Activity and Reports
+
+- Activity now uses the shared page navigation/header, loading and error states, summary panel, activity list, and activity entry classes. The search input and filtering behavior are unchanged.
+- Reports now presents total tasks, the three status counts, and recent activity in a responsive report grid. Status counts are displayed as a definition list for clearer scanning.
+- Added focused styles for the Activity header and empty state, report status rows and note, and consistent state-message spacing. Existing colors, cards, and responsive rules are reused.
+- The TaskItem, StatusFilter, and TaskList styling changes were made by the user and were left untouched in this update.
