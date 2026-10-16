@@ -60,7 +60,7 @@ export async function getActivityFromApi(): Promise<ActivityLog[]> {
 }
 
 export function getTasksSummaryFromApi(): Promise<TasksSummary> {
-  return requestJson<TasksSummary>("/api/reports/tasks-summary", {
+  return requestJson<TasksSummary>("/api/reports", {
     method: "GET",
   });
 }
